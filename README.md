@@ -2,4 +2,4 @@
 
 ---
 
-## New branch dev created in master
+## Feature1 merged
