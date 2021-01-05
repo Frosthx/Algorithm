@@ -4,4 +4,6 @@
 
 ## Feature1 merged
 
+bug fixed
+
 ## New Task
