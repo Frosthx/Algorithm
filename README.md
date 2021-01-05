@@ -4,6 +4,4 @@
 
 ## Feature1 merged
 
-Add some content
-
 ## New Task
