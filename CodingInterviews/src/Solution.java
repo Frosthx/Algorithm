@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
+import java.util.Map;
 
 class _03_findRepeatNumber{
     public int findRepeatNumber(int[] nums) {
@@ -10,7 +11,7 @@ class _03_findRepeatNumber{
             if(num<0 || num>=nums.length)
                 return -1;
         }
-        int temp = -1;
+        int temp;
         for(int i = 0; i < nums.length; ++i){
             while(nums[i]!=i){
                 if(nums[i]==nums[nums[i]])
@@ -87,20 +88,20 @@ class TreeNode {
 }
 class _07_buildTree {
     private int[] preorder;
-    private HashMap<Integer, Integer> dic = new HashMap<>();
+    private final Map<Integer,Integer> rootPos=new HashMap<>();
     public TreeNode buildTree(int[] preorder, int[] inorder) {
-        this.preorder = preorder;
-        for(int i = 0; i < inorder.length; i++)
-            dic.put(inorder[i], i);
-        return recur(0, 0, inorder.length - 1);
+        this.preorder=preorder;
+        for(int i=0;i<inorder.length;i++)
+            rootPos.put(inorder[i],i);
+        return getRoot(0,0,inorder.length-1);
     }
-    private TreeNode recur(int root, int left, int right) {
-        if(left > right) return null;                          // 递归终止
-        TreeNode node = new TreeNode(preorder[root]);          // 建立根节点
-        int i = dic.get(preorder[root]);                       // 划分根节点、左子树、右子树
-        node.left = recur(root + 1, left, i - 1);              // 开启左子树递归
-        node.right = recur(root + i - left + 1, i + 1, right); // 开启右子树递归
-        return node;                                           // 回溯返回根节点
+    private TreeNode getRoot(int root,int left,int right){
+        if(left>right)  return null;
+        TreeNode node=new TreeNode(preorder[root]);
+        int pos=rootPos.get(preorder[root]);
+        node.left=getRoot(root+1,left,pos-1);
+        node.right=getRoot(root+1+pos-left,pos+1,right);
+        return node;
     }
 }
 
