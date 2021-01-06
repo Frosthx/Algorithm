@@ -1,4 +1,5 @@
 CodingInterviews/.idea
 CodingInterviews/*.iml
+CodingInterviews/out
 !CodingInterviews/src/*.java
 
