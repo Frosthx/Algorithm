@@ -1,2 +1,4 @@
-*
-!/CodingInterviews/src/*.java
+CodingInterviews/.idea
+CodingInterviews/*.iml
+!CodingInterviews/src/*.java
+
