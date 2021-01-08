@@ -1,9 +1,6 @@
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 //数组中重复的数字
 class _03_findRepeatNumber{
@@ -167,10 +164,237 @@ class _10_numWays {
     }
 }
 
+//旋转数组中的最小数字
+class _11_minArray {
+    public int minArray(int[] numbers) {
+        int left=0;
+        int right=numbers.length-1;
+        if(numbers[left]<numbers[right])
+            return numbers[left];
+        int pivot=left+((right-left)>>1);
+        if(numbers[left]==numbers[pivot] && numbers[pivot]==numbers[right]){
+            int min=numbers[left];
+            for(int i=left+1;i<=right;i++)
+                min=Math.min(min,numbers[i]);
+            return min;
+        }
+        while(left+1!=right){
+            pivot=left+((right-left)>>1);
+            if(numbers[pivot]<=numbers[right])
+                right=pivot;
+            else if(numbers[pivot]>numbers[right])
+                left=pivot;
+        }
+        return numbers[right];
+    }
+}
+
+//矩阵中的路径
+class _12_exist {
+    private boolean[][] visited;
+    private char[] word;
+    private char[][] board;
+    public boolean exist(char[][] board, String word) {
+        this.board=board;
+        this.word=word.toCharArray();
+        visited=new boolean[board.length][board[0].length];
+        for(int i=0;i<board.length;i++)
+            for(int j=0;j<board[0].length;j++)
+                if(DFS(0,i,j))
+                    return true;
+        return false;
+    }
+    private boolean DFS(int pos,int x,int y){
+        if(visited[x][y] || board[x][y]!=word[pos])
+            return false;
+        visited[x][y]=true;
+        if(pos==word.length-1)
+            return true;
+        if((x>0 && DFS(pos+1,x-1,y)) ||
+                (y>0 && DFS(pos+1,x,y-1)) ||
+                (x<board.length-1 && DFS(pos+1,x+1,y)) ||
+                (y<board[0].length-1 && DFS(pos+1,x,y+1)))
+            return true;
+        visited[x][y]=false;
+        return false;
+    }
+}
+
+//机器人的运动范围
+class _13_movingCount {
+    private int m;
+    private int n;
+    private int k;
+    private BitSet visited;
+    public int movingCount(int m, int n, int k) {
+        if(k==0)    return 1;
+        this.m=m;
+        this.n=n;
+        this.k=k;
+        visited=new BitSet(m*n);
+        DFS(0,0);
+        return visited.cardinality();
+    }
+    private void DFS(int x,int y){
+        visited.set(x*n+y);
+        if(checkAccess(x+1,y) && !visited.get((x+1)*n+y))    DFS(x+1,y);
+        if(checkAccess(x,y+1) && !visited.get(x*n+y+1))    DFS(x,y+1);
+    }
+    private boolean checkAccess(int x,int y){
+        if(x<0 || x>=m || y<0 || y>=n)
+            return false;
+        int sum=0;
+        while(x!=0){
+            sum+=x%10;
+            x/=10;
+        }
+        while(y!=0){
+            sum+=y%10;
+            y/=10;
+        }
+        return sum <= k;
+    }
+}
+
+//剪绳子
+class _14_cuttingRope {
+    public int cuttingRope(int n) {
+        if(n<2) return 0;
+        if(n==2)    return 1;
+        if(n==3)    return 2;
+        int[] res=new int[n+1];
+        res[0]=0;
+        res[1]=1;
+        res[2]=2;
+        res[3]=3;       //3(4)及以下长度绳子的最大乘积为其自身（m==1）
+        int max;
+        for(int i=4;i<=n;i++){
+            max=0;
+            for(int j=1;j<=i/2;j++){
+                max=Math.max(max,res[j]*res[i-j]);
+                res[i]=max;
+            }
+        }
+        return res[n];
+    }
+}
+
+//二进制中1的个数
+class _15_hammingWeight {
+    // you need to treat n as an unsigned value
+    public int hammingWeight(int n) {
+        int count=0;
+        while(n!=0){
+            count++;
+            n&=(n-1);
+        }
+        return count;
+    }
+}
+
+//数值的整数次方（快速幂）
+class _16_myPow {
+    public double myPow(double x, int n) {
+        if(x==0 || n==0)    return 1;
+        long b=n;       //用long代替int以防b=-b溢出
+        if(b<0){
+            x=1/x;
+            b=-b;
+        }
+        double result=1.0;
+        while(b>0){
+            if((b&1)==1)
+                result*=x;
+            x*=x;
+            b>>=1;
+        }
+        return result;
+    }
+}
+
+//打印从1到最大的n位数，未考虑大数
+class _17_printNumbers {
+    public int[] printNumbers(int n) {
+        int numSize=(int)Math.pow(10,n)-1;
+        int[] nums=new int[numSize];
+        for(int i=0;i<numSize;i++)
+            nums[i]=i+1;
+        return nums;
+    }
+}
+
+//17题考虑大数
+class _17_printNumbers_string {
+    private StringBuilder res;
+    private int start;
+    private int n;
+    private int nine = 0;
+    private char[] num;
+    private final char[] loop = {'0','1','2','3','4','5','6','7','8','9'};
+    public String printNumbers(int n){
+        this.n = n;
+        num = new char[n];
+        res = new StringBuilder();
+        start = n - 1;
+        DFS(0);
+        res.deleteCharAt(res.length() - 1);
+        return res.substring(2,res.length());       //去除开头的"0,"和末尾的","
+    }
+    private void DFS(int x){
+        if(x == n){
+            res.append(String.valueOf(num).substring(start)).append(",");
+            if(n - start == nine)   start--;
+            return;
+        }
+        for(char i : loop){
+            if(i == '9')    nine++;
+            num[x] = i;
+            DFS(x + 1);
+        }
+        nine--;
+    }
+}
+
+//删除链表的节点
+class _18_deleteNode {
+    public ListNode deleteNode(ListNode head, ListNode toBeDeleted) {
+        if(head == null || toBeDeleted == null) return null;
+        if(head == toBeDeleted) return head.next;
+        if(toBeDeleted.next != null){
+            ListNode next = toBeDeleted.next;
+            toBeDeleted.val = next.val;
+            toBeDeleted.next = next.next;
+        }
+        else{
+            ListNode node = head;
+            while(node.next != toBeDeleted)
+                node = node.next;
+            node.next = null;
+        }
+        return head;
+    }
+}
+
+//删除链表的节点（相比原题有改动）
+class _18_deleteNodeModified {
+    public ListNode deleteNode(ListNode head, int val) {
+        if(head == null)    return null;
+        if(head.val == val) return head.next;
+        ListNode node = head;
+        while(node.next != null){
+            if(node.next.val == val){
+                node.next = node.next.next;
+                return head;
+            }
+            node = node.next;
+        }
+        return null;
+    }
+}
+
 class UnitTest{
     @Test
     public void test1(){
-        _05_replaceSpace s = new _05_replaceSpace();
-        System.out.println(s.replaceSpace(" We are not happy. !"));
+
     }
 }
