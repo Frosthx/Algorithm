@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 //数组中重复的数字
 class _03_findRepeatNumber{
@@ -376,7 +377,7 @@ class _18_deleteNode {
 }
 
 //删除链表的节点（相比原题有改动）
-class _18_deleteNodeModified {
+class _18_deleteNode_Modified {
     public ListNode deleteNode(ListNode head, int val) {
         if(head == null)    return null;
         if(head.val == val) return head.next;
@@ -392,9 +393,246 @@ class _18_deleteNodeModified {
     }
 }
 
+//正大表达式匹配（时间换空间）
+class _19_isMatch_Space {
+    private char[] s;
+    private char[] p;
+    public boolean isMatch(String s, String p) {
+        if(s == null || p == null)
+            return false;
+        this.s = s.toCharArray();
+        this.p = p.toCharArray();
+        return match(0, 0);
+    }
+    private boolean match(int i, int j){
+        if(i == s.length){
+            if(((p.length - j) & 1) != 0)   return false;
+            for(int k = j+1; k < p.length; k+=2)
+                if(p[k] != '*') return false;
+            return true;
+        }
+        if(j == p.length)
+            return false;
+        if(j < p.length - 1 && p[j+1] == '*'){
+            if(s[i] == p[j] || p[j] == '.')
+                return match(i+1, j+2)
+                    || match(i+1, j)
+                    || match(i, j+2);
+            else
+                return match(i, j+2);
+        }
+        if(s[i] == p[j] || p[j] == '.')
+            return match(i+1, j+1);
+        return false;
+    }
+}
+
+//正大表达式匹配（空间换时间）
+class _19_isMatch_Time {
+    public boolean isMatch(String s, String p) {
+        char[] chs = s.toCharArray(), chp = p.toCharArray();
+        int m = chs.length + 1, n = chp.length + 1;
+        boolean[][] dp = new boolean[m][n];
+        dp[0][0] = true;
+        for(int j = 2; j < n; j += 2)
+            dp[0][j] = dp[0][j - 2] && chp[j-1] == '*';
+        for(int i = 1; i < m; i++) {
+            for(int j = 1; j < n; j++) {
+                dp[i][j] = chp[j-1] == '*' ?
+                        dp[i][j - 2] || dp[i][j - 1] || dp[i - 1][j] && (chs[i-1] == chp[j-2] || chp[j-2] == '.') :
+                        dp[i - 1][j - 1] && (chp[j-1] == '.' || chs[i-1] == chp[j-1]);
+            }
+        }
+        return dp[m - 1][n - 1];
+    }
+}
+
+//表示数值的字符串
+class _20_isNumber {
+    public boolean isNumber(String s) {
+        if(s == null || s.length() == 0)
+            return false;
+        boolean hasNum = false;
+        boolean hasDot = false;
+        boolean hasE = false;
+        char[] chs = s.trim().toCharArray();
+        for(int i = 0; i < chs.length; ++i){
+            if(chs[i] >= '0' && chs[i] <= '9')
+                hasNum = true;
+            else if(chs[i] == '.'){
+                if(hasDot || hasE)
+                    return false;
+                hasDot = true;
+            }
+            else if(chs[i] == 'e' || chs[i] == 'E'){
+                if(hasE || !hasNum)
+                    return false;
+                hasE = true;
+                hasNum = false;
+            }
+            else if(chs[i] == '+' || chs[i] == '-'){
+                if(i != 0 && chs[i - 1] != 'E' && chs[i - 1] != 'e')
+                    return false;
+            }
+            else
+                return false;
+        }
+        return hasNum;
+    }
+}
+
+//调整数组顺序使奇数位于偶数前面
+class _21_exchange {
+    public int[] exchange(int[] nums) {
+        if(nums == null || nums.length <= 1)
+            return nums;
+        int left = 0;
+        int right = nums.length - 1;
+        while(left < right){
+            while(left < nums.length && (nums[left] & 1) == 1)    left++;
+            while(right >= 0 && (nums[right] & 1) == 0)   right--;
+            if(left < right){
+                int tmp = nums[right];
+                nums[right] = nums[left];
+                nums[left] = tmp;
+                left++;
+                right--;
+            }
+        }
+        return nums;
+    }
+}
+
+//调整数组顺序使奇数位于偶数前面（可扩展）
+class _21_exchangeExtendable {
+    public int[] exchange(int[] nums, Predicate<Integer> predicate) {
+        if(nums == null || nums.length <= 1)
+            return nums;
+        int left = 0;
+        int right = nums.length - 1;
+        while(left < right){
+            while(left < right && predicate.test(nums[left]))    left++;
+            while(left < right && !predicate.test(nums[right]))   right--;
+            if(left < right){
+                int tmp = nums[right];
+                nums[right] = nums[left];
+                nums[left] = tmp;
+                left++;
+                right--;
+            }
+        }
+        return nums;
+    }
+    @Test
+    public void test(){
+        _21_exchangeExtendable e = new _21_exchangeExtendable();
+        int[] nums = e.exchange(new int[]{2,2,1,4,3,5},n->(n&1)==1);
+        System.out.println(Arrays.toString(nums));
+    }
+}
+
+//链表中倒数第k个节点
+class _22_getKthFromEnd {
+    public ListNode getKthFromEnd(ListNode head, int k) {
+        if(head == null || k <= 0)
+            return null;
+        ListNode last = head;
+        k--;
+        while(k-- != 0){
+            last = last.next;
+            if(last == null)
+                return null;
+        }
+        ListNode res = head;
+        while(last.next != null){
+            last = last.next;
+            res = res.next;
+        }
+        return res;
+    }
+}
+
+//链表中环的入口节点
+class _23_entryNodeOfLoop{
+    public ListNode entryNodeOfLoop(ListNode head){
+        if(head == null)
+            return null;
+        Set<ListNode> nodeSet = new HashSet<>();
+        ListNode node = head;
+        while(node != null){
+            if(!nodeSet.add(node))
+                return node;
+            node = node.next;
+        }
+        return null;
+    }
+    @Test
+    public void test(){
+        ListNode head = new ListNode(1);
+        ListNode node = head;
+        for(int i = 2; i <= 6; ++i){
+            node.next = new ListNode(i);
+            node = node.next;
+        }
+        node.next = head.next.next;
+        System.out.println(entryNodeOfLoop(head).val);
+    }
+}
+
+//反转链表
+class _24_reverseList {
+    public ListNode reverseList(ListNode head) {
+        ListNode result = null;
+        ListNode node = head;
+        ListNode prev = null;
+        while(node != null){
+            ListNode next = node.next;
+            if(next == null)
+                result = node;
+            node.next = prev;
+            prev = node;
+            node = next;
+        }
+        return result;
+    }
+}
+
+//合并两个排序的链表
+class _25_mergeTwoLists {
+    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+        ListNode dummy = new ListNode(-1);
+        ListNode node = dummy;
+        while(l1 != null && l2 !=null){
+            if(l1.val <= l2.val){
+                node.next = l1;
+                l1 = l1.next;
+            }
+            else{
+                node.next = l2;
+                l2 = l2.next;
+            }
+            node = node.next;
+        }
+        node.next = l1!=null ? l1 : l2;
+        return dummy.next;
+    }
+}
+
+//树的子结构
+class _26_isSubStructure {
+    public boolean isSubStructure(TreeNode A, TreeNode B) {
+        return (A != null && B != null) &&
+                (recur(A, B) || isSubStructure(A.left, B) || isSubStructure(A.right, B));
+    }
+    private boolean recur(TreeNode A, TreeNode B){
+        if(B == null)   return true;
+        if(A == null || A.val != B.val)    return false;
+        return recur(A.left, B.left) && recur(A.right, B.right);
+    }
+}
+
 class UnitTest{
     @Test
-    public void test1(){
-
+    public void test(){
     }
 }
