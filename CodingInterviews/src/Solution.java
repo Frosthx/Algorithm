@@ -2,6 +2,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 //数组中重复的数字
 class _03_findRepeatNumber{
@@ -631,6 +632,518 @@ class _26_isSubStructure {
     }
 }
 
+//二叉树的镜像（除递归外，可用栈或队列）
+class _27_mirrorTree {
+    public TreeNode mirrorTree(TreeNode root) {
+        if(root == null)
+            return null;
+        TreeNode tmp = root.left;
+        root.left = mirrorTree(root.right);
+        root.right = mirrorTree(tmp);
+        return root;
+    }
+}
+
+//对称的二叉树（递归，比较二叉树的前序遍历序列和对称前序遍历序列）
+class _28_isSymmetric {
+    public boolean isSymmetric(TreeNode root) {
+        return root == null || recur(root.left, root.right);
+    }
+    private boolean recur(TreeNode L, TreeNode R){
+        if(L == null && R == null)   return true;
+        if(L == null || R == null || L.val != R.val)   return false;
+        return recur(L.left, R.right) && recur(L.right, R.left);
+    }
+}
+
+//顺时针打印矩阵
+class _29_spiralOrder {
+    public int[] spiralOrder(int[][] matrix) {
+        if(matrix.length == 0)  return new int[0];
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+        int[] res = new int[rows * cols];
+        int start = 0;
+        int pos = 0;
+        while(rows > start * 2 && cols > start * 2){
+            int endX = rows - 1 - start;
+            int endY = cols - 1 - start;
+            for(int i = start; i <= endY; i++)
+                res[pos++] = matrix[start][i];
+            if(start < endX)
+                for(int i = start + 1; i <= endX; i++)
+                    res[pos++] = matrix[i][endY];
+            if(start < endX && start < endY)
+                for(int i = endY - 1; i >= start; i--)
+                    res[pos++] = matrix[endX][i];
+            if(start < endX - 1 && start < endY)
+                for(int i = endX - 1; i > start; i--)
+                    res[pos++] = matrix[i][start];
+            start++;
+        }
+        return res;
+    }
+}
+
+class _30_MinStack {
+    private final Deque<Integer> data;
+    private final Deque<Integer> min;
+    public _30_MinStack() {
+        data = new LinkedList<>();
+        min = new LinkedList<>();
+    }
+    public void push(int x) {
+        data.offerLast(x);
+        if(min.size() == 0 || min.peekLast() > x)
+            min.offerLast(x);
+        else
+            min.offerLast(min.peekLast());
+    }
+    public void pop() {
+        assert(data.size() > 0 && min.size() > 0);
+        data.pollLast();
+        min.pollLast();
+    }
+    public int top() {
+        assert(!data.isEmpty());
+        return data.peekLast();
+    }
+    public int min() {
+        assert(!min.isEmpty());
+        return min.peekLast();
+    }
+    @Test
+    public void test(){
+        _30_MinStack ms = new _30_MinStack();
+        ms.push(-2);
+        ms.push(0);
+        ms.push(-3);
+        System.out.println(ms.min());
+        ms.pop();
+        System.out.println(ms.top());
+        System.out.println(ms.min());
+    }
+}
+
+//栈的压入、弹出序列
+class _31_validateStackSequences {
+    public boolean validateStackSequences(int[] pushed, int[] popped) {
+        Deque<Integer> stack = new LinkedList<>();
+        int pop = 0;
+        for(int num : pushed){
+            stack.offerLast(num);
+            while(!stack.isEmpty() && stack.peekLast() == popped[pop]){
+                stack.pollLast();
+                pop++;
+            }
+        }
+        return stack.isEmpty();
+    }
+    public boolean validateStackSequences_Map(int[] pushed, int[] popped) {
+        if(pushed.length != popped.length)
+            return false;
+        if(pushed.length == 0)
+            return true;
+        int len = pushed.length;
+        Map<Integer, Integer> pushOrder = new HashMap<>(len);
+        for(int i = 0; i < len; i++)
+            pushOrder.put(pushed[i], i);
+        int push = 0;
+        int pop = 0;
+        Deque<Integer> stack = new ArrayDeque<>(len);
+        while(pop < len){
+            int elementIndex = pushOrder.get(popped[pop]);
+            while(elementIndex >= push)
+                stack.offerLast(pushed[push++]);
+            if(!stack.isEmpty() && stack.pollLast() != popped[pop++])
+                return false;
+        }
+        return true;
+    }
+}
+
+//从上到下打印二叉树
+class _32_levelOrder {
+    public int[] levelOrder(TreeNode root) {
+        if(root == null)
+            return new int[0];
+        ArrayList<Integer> ans = new ArrayList<>();
+        Queue<TreeNode> queue = new LinkedList<>(){{offer(root);}};
+        while(!queue.isEmpty()){
+            TreeNode node = queue.poll();
+            ans.add(node.val);
+            if(node.left != null)   queue.offer(node.left);
+            if(node.right != null)  queue.offer(node.right);
+        }
+        int[] res = new int[ans.size()];
+        for(int i = 0; i < ans.size(); i++)
+            res[i] = ans.get(i);
+        return res;
+    }
+    public List<List<Integer>> levelOrder_lines(TreeNode root) {
+        List<List<Integer>> res = new LinkedList<>();
+        Queue<TreeNode> queue = new LinkedList<>();
+        if(root != null)    queue.offer(root);
+        while(!queue.isEmpty()){
+            List<Integer> line = new LinkedList<>();
+            for(int i = queue.size(); i > 0; i--){
+                TreeNode node = queue.poll();
+                assert node != null;
+                line.add(node.val);
+                if(node.left != null)   queue.offer(node.left);
+                if(node.right != null)  queue.offer(node.right);
+            }
+            res.add(line);
+        }
+        return res;
+    }
+    public List<List<Integer>> levelOrder_Z(TreeNode root) {        //亦可用双栈
+        List<List<Integer>> res = new LinkedList<>();
+        Queue<TreeNode> queue = new LinkedList<>();
+        if(root != null) queue.offer(root);
+        boolean oddLevel = true;
+        while(!queue.isEmpty()){
+            oddLevel = !oddLevel;
+            LinkedList<Integer> line = new LinkedList<>();
+            for(int i = queue.size(); i > 0; i--){
+                TreeNode node = queue.poll();
+                assert node != null;
+                if(oddLevel) line.offerFirst(node.val);
+                else    line.offerLast(node.val);
+                if(node.left != null)   queue.offer(node.left);
+                if(node.right != null)  queue.offer(node.right);
+            }
+            res.add(line);
+        }
+        return res;
+    }
+}
+
+//二叉搜索树的后序遍历序列（在递归前判断是否继续递归可减少栈的使用）
+class _33_verifyPostorder {
+    public boolean verifyPostorder(int[] postorder) {
+        return postorder == null || postorder.length <= 1 ||
+                recurVerify(postorder,0,postorder.length-1);
+    }
+    private boolean recurVerify(int[] postorder, int start, int end){
+        int pos = start;
+        while(postorder[pos] < postorder[end]) pos++;
+        int leftEnd = pos - 1;
+        while(postorder[pos] > postorder[end]) pos++;
+        if(pos != end) return false;
+        boolean left = leftEnd <= start || recurVerify(postorder,start,leftEnd);
+        boolean right = leftEnd + 1 >= end - 1 || recurVerify(postorder,leftEnd+1,end-1);
+        return left && right;
+    }
+    public boolean verifyPostorder_monoStack(int[] postorder) {     //单调栈解法
+        Stack<Integer> stack = new Stack<>();
+        int root = Integer.MAX_VALUE;
+        for(int i = postorder.length - 1; i >= 0; i--) {
+            if(postorder[i] > root) return false;
+            while(!stack.isEmpty() && stack.peek() > postorder[i])
+                root = stack.pop();
+            stack.add(postorder[i]);
+        }
+        return true;
+    }
+}
+
+//二叉树中和为某一值的路径
+class _34_pathSum {
+    private final List<List<Integer>> paths = new LinkedList<>();
+    public List<List<Integer>> pathSum(TreeNode root, int sum) {
+        if(root == null)    return paths;
+        Deque<TreeNode> path = new LinkedList<>();
+        findPath(path, root, 0, sum);
+        return paths;
+    }
+    private void findPath(Deque<TreeNode> path, TreeNode root, int curVal, int target){
+        path.offerLast(root);
+        curVal += root.val;
+        if(curVal == target && root.left == null && root.right == null){
+            List<Integer> newPath = new ArrayList<>(path.size());
+            for(TreeNode node : path)
+                newPath.add(node.val);
+            paths.add(newPath);
+        }
+        if(root.left != null)
+            findPath(path, root.left, curVal, target);
+        if(root.right != null)
+            findPath(path, root.right, curVal, target);
+        path.pollLast();
+    }
+}
+
+//复杂链表的复制
+class Node {
+    int val;
+    Node next;
+    Node random;
+
+    public Node(int val) {
+        this.val = val;
+        this.next = null;
+        this.random = null;
+    }
+}
+class _35_copyRandomList {
+    public Node copyRandomList(Node head) {
+        if(head == null)    return null;
+        Node cur = head;
+        while(cur != null){
+            Node copy = new Node(cur.val);
+            copy.next = cur.next;
+            copy.random = cur.random;
+            cur.next = copy;
+            cur = copy.next;
+        }
+        cur = head;
+        while(cur != null){
+            cur = cur.next;
+            if(cur.random != null)
+                cur.random = cur.random.next;
+            cur = cur.next;
+        }
+        Node copyHead = head.next;
+        cur = head;
+        while(cur != null){
+            Node copy = cur.next;
+            cur.next = copy.next;
+            if(cur.next != null)
+                copy.next = cur.next.next;
+            cur = cur.next;
+        }
+        return copyHead;
+    }
+    public Node copyRandomList_hashMap(Node head) {
+        if(head == null)    return null;
+        Map<Node,Node> nodeMap = new HashMap<>();
+        Node origin = head;
+        Node dummyHead = new Node(-1);
+        Node copy = dummyHead;
+        while(origin != null){
+            copy.next = new Node(origin.val);
+            nodeMap.put(origin,copy.next);
+            origin = origin.next;
+            copy = copy.next;
+        }
+        origin = head;
+        copy = dummyHead.next;
+        while(origin != null){
+            if(origin.random != null)
+                copy.random = nodeMap.get(origin.random);
+            origin = origin.next;
+            copy = copy.next;
+        }
+        return dummyHead.next;
+    }
+}
+
+//二叉搜索树与双向链表
+class _36_treeToDoublyList {
+    static class Node {
+        public int val;
+        public Node left;
+        public Node right;
+
+        public Node() {}
+
+        public Node(int _val) {
+            val = _val;
+        }
+
+        public Node(int _val,Node _left,Node _right) {
+            val = _val;
+            left = _left;
+            right = _right;
+        }
+    };
+    private Node pre;
+    private Node head;
+    public Node treeToDoublyList(Node root) {
+        if(root == null)    return null;
+        dfs(root);
+        head.left = pre;
+        pre.right = head;
+        return head;
+    }
+    private void dfs(Node cur){
+        if(cur == null) return;
+        dfs(cur.left);
+        if(pre != null) pre.right = cur;
+        else    head = cur;
+        cur.left = pre;
+        pre = cur;
+        dfs(cur.right);
+    }
+}
+
+//序列号二叉树
+class _37_Codec {
+    public String serialize(TreeNode root) {
+        if(root == null) return "[]";
+        StringBuilder res = new StringBuilder("[");
+        Queue<TreeNode> queue = new LinkedList<>() {{ add(root); }};
+        while(!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            if(node != null) {
+                res.append(node.val).append(",");
+                queue.add(node.left);
+                queue.add(node.right);
+            }
+            else res.append("null,");
+        }
+        return res.deleteCharAt(res.length() - 1).append("]").toString();
+    }
+    public TreeNode deserialize(String data) {
+        if(data.equals("[]")) return null;
+        String[] vals = data.substring(1, data.length() - 1).split(",");
+        TreeNode root = new TreeNode(Integer.parseInt(vals[0]));
+        Queue<TreeNode> queue = new LinkedList<>() {{ add(root); }};
+        int i = 1;
+        while(!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            if(!vals[i].equals("null")) {
+                node.left = new TreeNode(Integer.parseInt(vals[i]));
+                queue.add(node.left);
+            }
+            i++;
+            if(!vals[i].equals("null")) {
+                node.right = new TreeNode(Integer.parseInt(vals[i]));
+                queue.add(node.right);
+            }
+            i++;
+        }
+        return root;
+    }
+    @Test
+    public void test(){
+        TreeNode root = new TreeNode(1);
+        root.left = new TreeNode(2);
+        TreeNode node3 = root.right = new TreeNode(3);
+        TreeNode node4 = node3.left = new TreeNode(4);
+        TreeNode node5 = node3.right = new TreeNode(5);
+        node4.left = new TreeNode(6);
+        node4.right = new TreeNode(7);
+        node5.right = new TreeNode(8);
+        System.out.println(serialize(deserialize(serialize(root))));
+    }
+    @Test
+    public void test1(){
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0;i < 10000000; i++)
+            sb.append(i);
+        StringBuilder sb1 = new StringBuilder(sb);
+        long start = System.currentTimeMillis();
+        while(sb.length() != 0)
+            sb.deleteCharAt(sb.length() - 1);
+        System.out.println(System.currentTimeMillis() - start);
+        start = System.currentTimeMillis();
+        while(sb1.length() != 0)
+            sb1.setLength(sb1.length() - 1);
+        System.out.println(System.currentTimeMillis() - start);
+    }
+}
+
+//字符串的排列
+class _38_permutations {
+    private boolean[] visited;
+    private char[] chs;
+    private char[] instance;
+    private List<String> res;
+    public String[] permutation(String s) {
+        visited = new boolean[s.length()];
+        res = new LinkedList<>();
+        chs = s.toCharArray();
+        Arrays.sort(chs);
+        instance = new char[chs.length];
+        dfs(0);
+        return res.toArray(new String[res.size()]);
+    }
+    private void dfs(int pos){
+        if(pos == chs.length){
+            res.add(String.valueOf(instance));
+            return;
+        }
+        for(int i = 0; i < chs.length; i++){
+            if(visited[i])  continue;
+            if(i > 0 && chs[i] == chs[i - 1] && !visited[i - 1]) continue;  //确保a1a2中只保留a1a2而剔除重复项a2a1
+            visited[i] = true;
+            instance[pos] = chs[i];
+            dfs(pos+1);
+            visited[i] = false;
+        }
+    }
+}
+
+class _38_permutations_hashSetSwap {
+    List<String> res = new LinkedList<>();
+    char[] c;
+    public String[] permutation(String s) {
+        c = s.toCharArray();
+        dfs(0);
+        return res.toArray(new String[res.size()]);
+    }
+    void dfs(int x) {
+        if(x == c.length - 1) {
+            res.add(String.valueOf(c)); // 添加排列方案
+            return;
+        }
+        HashSet<Character> set = new HashSet<>();
+        for(int i = x; i < c.length; i++) {
+            if(set.contains(c[i])) continue; // 重复，因此剪枝
+            set.add(c[i]);
+            swap(i, x); // 交换，将 c[i] 固定在第 x 位
+            dfs(x + 1); // 开启固定第 x + 1 位字符
+            swap(i, x); // 恢复交换
+        }
+    }
+    void swap(int a, int b) {
+        char tmp = c[a];
+        c[a] = c[b];
+        c[b] = tmp;
+    }
+}
+
+//求字符的所有组合
+class _38_composition{
+    public String[] getComposition(String s){       //当参数中含重复字符时，该方法不能去除重复项
+        if(s.length() == 0) return new String[0];
+        char[] chs = s.toCharArray();
+        int max = (1 << chs.length) - 1;
+        String[] res = new String[max];
+        int pos = 0;
+        for(int i = 1; i <= max; i++){
+            StringBuilder tmp = new StringBuilder();
+            int ex = Math.getExponent(i);
+            for(int j = 0; j <= ex; j++)
+                if(((i >> j) & 1) == 1)
+                    tmp.append(chs[j]);
+            res[pos++] = tmp.toString();
+        }
+        return res;
+    }
+    public String[] getComposition_hashSet(String s){   //利用哈希集去重
+        if(s.length() == 0) return new String[0];
+        char[] chs = s.toCharArray();
+        int max = (1 << s.length()) - 1;
+        Set<String> res = new HashSet<>();
+        for(int i = 1; i <= max; i++){
+            StringBuilder tmp = new StringBuilder();
+            int ex = Math.getExponent(i);
+            for(int j = 0; j <= ex; j++)
+                if(((i >> j) & 1) == 1)
+                    tmp.append(chs[j]);
+            res.add(tmp.toString());
+        }
+        return res.toArray(new String[0]);
+    }
+    @Test
+    public void test(){
+        for(String s : getComposition_hashSet("aabb"))
+            System.out.print(s+'\n');
+    }
+}
 class UnitTest{
     @Test
     public void test(){

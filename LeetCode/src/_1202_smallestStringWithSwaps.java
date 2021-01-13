@@ -3,8 +3,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+//交换字符串中的元素
 public class _1202_smallestStringWithSwaps {
-    private class UnionFind{            //并查集
+    private static class UnionFind{            //并查集
         private final int[] parent;
         private final int[] rank;
         public UnionFind(int n){
