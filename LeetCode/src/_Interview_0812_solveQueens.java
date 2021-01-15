@@ -43,9 +43,11 @@ public class _Interview_0812_solveQueens {
         List<String> valid = new ArrayList<>(n);
         for(int i = 0; i < n; i++){
             StringBuilder line = new StringBuilder();
-            line.append(".".repeat(Math.max(0, colIndex[i])));
+            for(int j = 0; j < colIndex[i]; j++)
+                line.append(".");
             line.append("Q");
-            line.append(".".repeat(Math.max(0, n - (colIndex[i] + 1))));
+            for(int j = colIndex[i] + 1; j < n; j++)
+                line.append(".");
             valid.add(line.toString());
         }
         res.add(valid);
