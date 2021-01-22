@@ -1,8 +1,11 @@
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 //数组中重复的数字
 class _03_findRepeatNumber{
@@ -1028,21 +1031,6 @@ class _37_Codec {
         node5.right = new TreeNode(8);
         System.out.println(serialize(deserialize(serialize(root))));
     }
-    @Test
-    public void test1(){
-        StringBuilder sb = new StringBuilder();
-        for(int i = 0;i < 10000000; i++)
-            sb.append(i);
-        StringBuilder sb1 = new StringBuilder(sb);
-        long start = System.currentTimeMillis();
-        while(sb.length() != 0)
-            sb.deleteCharAt(sb.length() - 1);
-        System.out.println(System.currentTimeMillis() - start);
-        start = System.currentTimeMillis();
-        while(sb1.length() != 0)
-            sb1.setLength(sb1.length() - 1);
-        System.out.println(System.currentTimeMillis() - start);
-    }
 }
 
 //字符串的排列
@@ -1156,8 +1144,537 @@ class _39_majorityElement {
         }
         return x;
     }
+}
+
+//最小的k个数
+class _40_getLeastNumbers {
+    public int[] getLeastNumbers(int[] arr, int k) {
+        if(k <= 0)  return new int[0];
+        else if(k == arr.length)    return arr;
+        partitionK(arr, 0, arr.length - 1, k - 1);
+        return Arrays.copyOf(arr, k);
+    }
+    private void partitionK(int[] arr, int start, int end, int k){
+        int pos = partition(arr, start, end);
+        int left = start;
+        int right = end;
+        while(pos != k){
+            if(pos > k) right = pos - 1;
+            else        left = pos + 1;
+            pos = partition(arr, left, right);
+        }
+    }
+    private int partition(int[] arr, int start, int end){
+        if(start + 1 >= end){
+            if(arr[start] > arr[end])   swap(arr, start, end);
+            return end;
+        }
+        int mid = start + ((end - start) >> 1);
+        if(arr[start] > arr[mid])   swap(arr,start,mid);
+        if(arr[mid] > arr[end])     swap(arr,mid,end);
+        if(arr[start] > arr[mid])   swap(arr,start,mid);
+        if(start + 2 == end)
+            return end - 1;
+        swap(arr, mid, end - 1);
+        int pivot = arr[end - 1];
+        int left = start;
+        int right = end - 1;
+        while(true){
+            while(arr[++left] < pivot);
+            while(pivot < arr[--right]);
+            if(left < right)    swap(arr, left, right);
+            else                break;
+        }
+        swap(arr, left, end - 1);
+        return left;
+    }
+    private void swap(int[] arr, int x, int y){
+        int tmp = arr[x];
+        arr[x] = arr[y];
+        arr[y] = tmp;
+    }
     @Test
     public void test(){
+        int[] arr = new int[]{0,1,2,1};
+        int[] res = getLeastNumbers(arr, 1);
+        System.out.println(Arrays.toString(res));
+    }
+}
+
+class _40_getLestaNumbers_heap{
+    public int[] getLeastNumbers(int[] arr, int k) {
+        if(k <= 0)  return new int[0];
+        else if(k == arr.length)    return arr;
+        PriorityQueue<Integer> maxHeap = new PriorityQueue<>((a,b)->b - a);
+        for(int i = 0; i < arr.length; i++){
+            if(maxHeap.size() < k)
+                maxHeap.offer(arr[i]);
+            else{
+                if(maxHeap.peek() > arr[i]){
+                    maxHeap.poll();
+                    maxHeap.offer(arr[i]);
+                }
+            }
+        }
+        int[] res = new int[k];
+        for(int i = 0; i < k; i++)
+            res[i] = maxHeap.poll();
+        return res;
+    }
+}
+
+//数据流中的中位数
+class _41_MedianFinder {
+    Queue<Integer> left;
+    Queue<Integer> right;
+    public _41_MedianFinder() {
+        left = new PriorityQueue<>((a,b)->(b-a));
+        right = new PriorityQueue<>();
+    }
+    public void addNum(int num) {
+        if(left.size() != right.size()){
+            left.offer(num);
+            right.offer(left.poll());
+        }
+        else{
+            right.offer(num);
+            left.offer(right.poll());
+        }
+    }
+    public double findMedian() {
+        return left.size() != right.size() ? left.peek() : (left.peek() + right.peek()) / 2.0;
+    }
+}
+
+//连续子数组的最大和
+class _42_maxSubArray {
+    public int maxSubArray(int[] nums) {
+        int maxSum = nums[0];
+        int currentSum = 0;
+        for(int num : nums){
+            if(currentSum < 0)  currentSum = num;
+            else    currentSum += num;
+            maxSum = Math.max(maxSum, currentSum);
+        }
+        return maxSum;
+    }
+}
+
+//1~n整数中1出现的次数
+class _43_countDigitOne {
+    public int countDigitOne(int n) {
+        int res = 0;
+        for(long i = 1; i <= n; i *= 10){
+            long divide = 10 * i;
+            res += n / divide * i + Math.min(Math.max(n % divide - i + 1,0),i);
+        }
+        return res;
+    }
+}
+
+//数字序列中某一位的数字
+class _44_findNthDigit {
+    public int findNthDigit(int n) {
+        int digit = 1;
+        long start = 1;
+        long count = 9;
+        while(n > count){
+            n -= count;
+            digit++;
+            start *= 10;
+            count = digit * start * 9;
+        }
+        long num = start + (n - 1) / digit;         //第1位数即最小数字的最低位（个位）
+        return Long.toString(num).charAt((n - 1) % digit) - '0';
+    }
+}
+
+//把数组排成最小的数
+class _45_minNumber {
+    public String minNumber(int[] nums) {
+        String[] strNums = new String[nums.length];
+        for(int i = 0; i < nums.length; i++)
+            strNums[i] = String.valueOf(nums[i]);
+        Arrays.sort(strNums, (x, y) -> (x + y).compareTo(y + x));
+        StringBuilder res = new StringBuilder();
+        for(String str : strNums)
+            res.append(str);
+        return res.toString();
+    }
+}
+
+//把数字翻译成字符串（斐波那契数列的应用）
+class _46_translateNum {
+    public int translateNum(int num) {
+        String s = String.valueOf(num);
+        int a = 1;
+        int b = 1;
+        for(int i = 2; i <= s.length(); i++){
+            String tmp = s.substring(i - 2, i);
+            int c = tmp.compareTo("10") >= 0 && tmp.compareTo("25") <= 0 ? a + b : b;
+            a = b;
+            b = c;
+        }
+        return b;
+    }
+    public int translateNum_space(int num){
+        int a = 1, b = 1, x, y = num % 10;
+        while(num != 0) {
+            num /= 10;
+            x = num % 10;
+            int tmp = 10 * x + y;
+            int c = (tmp >= 10 && tmp <= 25) ? a + b : b;
+            a = b;
+            b = c;
+            y = x;
+        }
+        return b;
+    }
+}
+
+//礼物的最大价值
+class _47_maxValue {
+    public int maxValue(int[][] grid) {
+        for(int j = 1; j < grid[0].length; j++)
+            grid[0][j] += grid[0][j - 1];
+        for(int i = 1; i < grid.length; i++)
+            grid[i][0] += grid[i - 1][0];
+        for(int i = 1; i < grid.length; i++)
+            for(int j = 1; j < grid[0].length; j++)
+                grid[i][j] += Math.max(grid[i - 1][j], grid[i][j - 1]);
+        return grid[grid.length -1][grid[0].length - 1];
+    }
+}
+
+//最长不含重复字符的子字符串
+class _48_lengthOfLongestSubstring {
+    public int lengthOfLongestSubstring(String s) {
+        if(s.length() == 0) return 0;
+        int max = 0;
+        int[] pos = new int[256];
+        Arrays.fill(pos, -1);
+        int last = -1;
+        for(int i = 0; i < s.length(); i++){
+            last = Math.max(last, pos[s.charAt(i)]);
+            max = Math.max(max, i - last);
+            pos[s.charAt(i)] = i;
+        }
+        return max;
+    }
+}
+
+//丑数
+class _49_nthUglyNumber {
+    public int nthUglyNumber(int n) {
+        if(n <= 0)  return 0;
+        int[] ugly = new int[n];
+        ugly[0] = 1;
+        int i = 0, j = 0, k = 0;
+        for(int p = 1; p < n; p++){
+            int min = Math.min(ugly[i] * 2, Math.min(ugly[j] * 3, ugly[k] * 5));
+            if(min == ugly[i] * 2)  i++;
+            if(min == ugly[j] * 3)  j++;
+            if(min == ugly[k] * 5)  k++;
+            ugly[p] = min;
+        }
+        return ugly[n - 1];
+    }
+}
+
+//第一个只出现一次的字符
+class _50_firstUniqChar {
+    public char firstUniqChar(String s) {
+        int[] count = new int[26];
+        char[] chs = s.toCharArray();
+        for (char ch : chs)
+            count[ch - 'a']++;
+        for (char ch : chs)
+            if (count[ch - 'a'] == 1)
+                return ch;
+        return ' ';
+    }
+}
+
+//数组中的逆序对
+class _51_reversePairs {
+    public int reversePairs(int[] nums) {
+        if(nums.length == 0)    return 0;
+        return mergeSort(nums);
+    }
+    private int mergeSort(int[] nums){
+        int count = 0;
+        int len = 1;
+        int[] tmp = new int[nums.length];
+        while(len < nums.length){
+            count += mergeSortPass(nums, tmp, len);
+            len *= 2;
+            count += mergeSortPass(tmp, nums, len);
+            len *= 2;
+        }
+        return count;
+    }
+    private int mergeSortPass(int[] src, int[] dst, int len){
+        int count = 0;
+        int i;
+        for(i = 0; i <= src.length - 2 * len; i += 2 * len)
+            count += mergeSortCore(src, dst, i, i + len, i + 2 * len - 1);
+        if(i + len < src.length)
+            count += mergeSortCore(src, dst, i, i + len, src.length - 1);
+        else
+            for(int j = i; j < src.length; j++)
+                dst[j] = src[j];
+        return count;
+    }
+    private int mergeSortCore(int[] src, int[] dst, int left, int right, int end){
+        int count = 0;
+        int leftEnd = right - 1;
+        int target = left;
+        while(left <= leftEnd && right <= end){
+            if(src[left] > src[right]){
+                dst[target++] = src[right++];
+                count += leftEnd - left + 1;
+            }
+            else
+                dst[target++] = src[left++];
+        }
+        while(left <= leftEnd)
+            dst[target++] = src[left++];
+        while(right <= end)
+            dst[target++] = src[right++];
+        return count;
+    }
+}
+
+//两个链表的第一个公共节点
+class _52_getIntersectionNode {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        if(headA == null || headB == null)  return null;
+        int lengthA = getLength(headA);
+        int lengthB = getLength(headB);
+        int cut = Math.abs(lengthA - lengthB);
+        ListNode longList = lengthA >= lengthB ? headA : headB;
+        ListNode shortList = longList == headA ? headB : headA;
+        for(int i = 0; i < cut; i++)
+            longList = longList.next;
+        while(longList != shortList){
+            longList = longList.next;
+            shortList = shortList.next;
+        }
+        return longList;
+    }
+    private int getLength(ListNode list){
+        int length = 0;
+        while(list != null){
+            length++;
+            list = list.next;
+        }
+        return length;
+    }
+}
+
+//在排序数组中查找数字I
+class _53_search {
+    public int search(int[] nums, int target) {
+        if(nums == null || nums.length == 0)    return 0;
+        int first = getIndex(nums, target, true);
+        int last = getIndex(nums, target, false);
+        if(first != -1 && last != -1)
+            return last - first + 1;
+        return 0;
+    }
+    private int getIndex(int[] nums, int target, boolean first){
+        int left = 0;
+        int right = nums.length - 1;
+        while(left <= right){
+            int mid = left + ((right - left) >> 1);
+            if(nums[mid] == target){
+                if(first && mid > left && nums[mid - 1] == target) right = mid - 1;
+                else if(!first && mid < right && nums[mid + 1] == target)  left = mid + 1;
+                else    return mid;
+            }
+            else if(nums[mid] < target) left = mid + 1;
+            else    right = mid - 1;
+        }
+        return -1;
+    }
+}
+
+//0~n-1中缺失的数字
+class _53_missingNumber {
+    public int missingNumber(int[] nums) {
+        int left = 0;
+        int right = nums.length - 1;
+        while(left <= right){
+            if(nums[left] != left)  return left;
+            int mid = (left + right) >> 1;
+            if(nums[mid] == mid)    left = mid + 1;
+            else right = mid;
+        }
+        return nums.length;
+    }
+}
+
+//二叉搜索树的第K大节点
+class _54_kthLargest {
+    private int k;
+    private int res;
+    public int kthLargest(TreeNode root, int k) {
+        if(root == null || k < 0)   return -1;
+        this.k = k;
+        inOrder(root);
+        return res;
+    }
+    private void inOrder(TreeNode root){
+        if(root == null)    return;
+        inOrder(root.right);
+        if(--k == 0)    res = root.val;
+        if(k > 0)   inOrder(root.left);
+    }
+}
+
+//二叉树的深度
+class _55_maxDepth {
+    public int maxDepth(TreeNode root) {
+        return root == null ? 0 : 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+    }
+}
+
+//数组中数字出现的次数
+class _56_singleNumbers {
+    public int[] singleNumbers(int[] nums) {
+        int xor = 0;
+        for(int num : nums)
+            xor ^= num;
+        int div = 1;
+        while((xor & div) == 0)
+            div <<= 1;
+        int a = 0;
+        int b = 0;
+        for(int num : nums){
+            if((num & div) == 0)
+                a ^= num;
+            else
+                b ^= num;
+        }
+        return new int[]{a, b};
+    }
+}
+
+//数组中数字出现的次数II
+class _56_singleNumber {
+    public int singleNumber(int[] nums) {
+        int ones = 0, twos = 0;
+        for(int num : nums){
+            ones = ones ^ num & ~twos;
+            twos = twos ^ num & ~ones;
+        }
+        return ones;
+    }
+}
+
+//和为s的两个数字（long型运算，避免溢出）
+class _57_twoSum {
+    public int[] twoSum(int[] nums, int target) {
+        int i = 0, j = nums.length - 1;
+        while(i < j){
+            long sum = nums[i] + nums[j];
+            if(sum == target)   return new int[]{nums[i], nums[j]};
+            else if(sum > target) j--;
+            else    i++;
+        }
+        return new int[0];
+    }
+}
+
+//和为s的连续正数序列
+class _57_findContinuousSequence {
+    public int[][] findContinuousSequence(int target) {
+        int i = 1;
+        int j = 2;
+        List<int[]> res = new ArrayList<>();
+        int cut = target >> 1;
+        while(i <= cut){
+            int sum = ((i + j) * (j - i + 1)) >> 1;
+            if(sum == target){
+                int[] arr = new int[j - i + 1];
+                for(int k = i; k <= j; k++)
+                    arr[k - i] = k;
+                res.add(arr);
+                i += 2;
+            }
+            else if(sum < target)
+                j++;
+            else
+                i++;
+        }
+        return res.toArray(new int[0][]);
+    }
+}
+
+//反转单词顺序
+class _58_reverseWords {
+    public String reverseWords(String s) {
+        s = s.trim();
+        int j = s.length() - 1, i = j;
+        StringBuilder res = new StringBuilder();
+        while(i >= 0){
+            while(i >= 0 && s.charAt(i) != ' ') i--;
+            res.append(s, i + 1, j + 1).append(' ');
+            while(i >= 0 && s.charAt(i) == ' ') i--;
+            j = i;
+        }
+        return res.toString().trim();
+    }
+}
+
+//滑动窗口的最大值
+class _58_maxSlidingWindow {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        if(nums == null || nums.length == 0 || k < 1)   return new int[0];
+        Deque<Integer> dq = new LinkedList<>();
+        for(int i = 0; i < k - 1; i++){
+            while(!dq.isEmpty() && nums[i] > nums[dq.peekLast()])
+                dq.pollLast();
+            dq.offerLast(i);
+        }
+        int[] res = new int[nums.length - (k - 1)];
+        for(int i = 0; i < res.length; i++){
+            while(!dq.isEmpty() && nums[i + k - 1] > nums[dq.peekLast()])
+                dq.pollLast();
+            dq.offerLast(i + k - 1);
+            while(dq.peekFirst() < i)
+                dq.pollFirst();
+            res[i] = nums[dq.peekFirst()];
+        }
+        return res;
+    }
+}
+
+//队列的最大值
+class _59_MaxQueue {
+    private final Deque<Integer> data;
+    private final Deque<Integer> max;
+    public _59_MaxQueue() {
+        data = new LinkedList<>();
+        max = new LinkedList<>();
+    }
+    public int max_value() {
+        if(max.isEmpty())
+            return -1;
+        return max.peekFirst();
+    }
+    public void push_back(int value) {
+        data.offerLast(value);
+        while(!max.isEmpty() && value > max.peekLast())
+            max.pollLast();
+        max.offerLast(value);
+    }
+    public int pop_front() {
+        if(data.isEmpty())
+            return -1;
+        if(max.peekFirst().equals(data.peekFirst()))
+            max.pollFirst();
+        return data.pollFirst();
     }
 }
 
