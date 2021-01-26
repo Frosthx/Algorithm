@@ -1678,6 +1678,182 @@ class _59_MaxQueue {
     }
 }
 
+//n个骰子的点数
+class _60_dicesProbability {
+    public double[] dicesProbability(int n) {
+        double[] dp = new double[n * 6 + 1];
+        for(int i = 1; i <= 6; i++)
+            dp[i] = 1;
+        for(int i = 2; i <= n; i++){
+            for(int j = i * 6; j >= i; j--){
+                dp[j] = 0;                      //从后往前更新，须将数据清零
+                for(int k = 1; k <= 6; k++){
+                    if(j - k < i - 1)          //投第n个骰子时，n-1个骰子的最小点数为n-1，小于该点数会取到n-2个骰子的数据
+                        break;
+                    dp[j] += dp[j - k];
+                }
+            }
+        }
+        double total = Math.pow(6, n);
+        double[] res = new double[n * 6 - (n - 1)];
+        for(int i = 0; i < res.length; i++)
+            res[i] = dp[i + n] / total;
+        return res;
+    }
+}
+
+//扑克牌中的顺子
+class _61_isStraight {
+    public boolean isStraight(int[] nums) {
+        Set<Integer> card = new HashSet<>();
+        int max = 0;
+        int min = 14;
+        for(int num : nums){
+            if(num == 0)    continue;
+            if(!card.add(num))   return false;
+            max = Math.max(max, num);
+            min = Math.min(min, num);
+        }
+        return max - min < 5;
+    }
+}
+
+//圆圈中最后剩下的数字
+class _62_lastRemaining {
+    public int lastRemaining(int n, int m) {    //数学
+        int ans = 0;
+        for(int i = 2; i <= n; i++)
+            ans = (ans + m) % i;
+        return ans;
+    }
+    public int lastRemaining_simulate(int n, int m) {    //数组模拟
+        ArrayList<Integer> arr = new ArrayList<>(n);
+        for(int i = 0; i < n; i++)
+            arr.add(i);
+        int idx = 0;
+        while(n > 1){
+            idx = (idx + m - 1) % n;
+            arr.remove(idx);
+            n--;
+        }
+        return arr.get(0);
+    }
+}
+
+//股票的最大利润
+class _63_maxProfit {
+    public int maxProfit(int[] prices) {
+        int buy = Integer.MIN_VALUE;
+        int sell = 0;
+        for(int price : prices){
+            buy = Math.max(buy, -price);
+            sell = Math.max(sell, buy + price);
+        }
+        return sell;
+    }
+}
+
+//求1+2+...+n（不能使用加减乘除、for/while/if/else/switch/三目运算符等关键字及条件判断语句）
+class _64_sumNums {
+    private int sum = 0;
+    public int sumNums(int n) {
+        boolean x = n > 1 && sumNums(n - 1) > 0;
+        sum += n;
+        return sum;
+    }
+    public int sumNums_slim(int n) {
+        boolean x = n > 1 && (n += sumNums_slim(n - 1)) > 0;
+        return n;
+    }
+}
+
+//不用加减乘除做加法
+class _65_add {
+    public int add(int a, int b) {
+        while(b != 0){
+            int c = (a & b) << 1;
+            a ^= b;
+            b = c;
+        }
+        return a;
+    }
+}
+
+//构建乘积数组
+class _66_constructArr {
+    public int[] constructArr(int[] a) {
+        if(a.length == 0)   return new int[0];
+        int[] res = new int[a.length];
+        res[0] = 1;
+        for(int i = 1; i < res.length; i++)
+            res[i] = res[i - 1] * a[i - 1];
+        int tmp = 1;
+        for(int i = res.length - 2; i >=0; i--){
+            tmp *= a[i + 1];
+            res[i] *= tmp;
+        }
+        return res;
+    }
+}
+
+//把字符串转换成整数
+class _67_strToInt {
+    public int strToInt(String str) {
+        char[] chs = str.toCharArray();
+        int i = 0;
+        while(i < chs.length && chs[i] == ' ')  i++;
+        if(i == chs.length) return 0;
+        boolean positive = true;
+        int res = 0;
+        if(chs[i] != '+' && chs[i] != '-' && (chs[i] < '0' || chs[i] > '9'))    return 0;
+        else if(chs[i] == '-')  positive = false;
+        else if(chs[i] != '+')  res = chs[i] - '0';
+        i++;
+        int boundry = Integer.MAX_VALUE / 10;
+        while(i < chs.length && chs[i] >= '0' && chs[i] <= '9'){
+            if(res > boundry || res == boundry && chs[i] > '7'){
+                if(positive)    return Integer.MAX_VALUE;
+                else            return Integer.MIN_VALUE;
+            }
+            res = res * 10 + (chs[i] - '0');
+            i++;
+        }
+        if(!positive)   res = -res;
+        return res;
+    }
+}
+
+//二叉搜索树的最近公共祖先
+class _68_lowestCommonAncestor {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        if(root == null || p == null || q == null)
+            return null;
+        if(p.val > q.val){
+            TreeNode temp = p;
+            p = q;
+            q = temp;
+        }
+        while(root != null){
+            if(root.val > q.val)   root = root.left;
+            else if(root.val < p.val)   root = root.right;
+            else    break;
+        }
+        return root;
+    }
+}
+
+//二叉树的最近公共祖先
+class _68_lowestCommonAncestor_II {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        if(root == null || root == p || root == q)  return root;
+        TreeNode left = lowestCommonAncestor(root.left, p, q);
+        TreeNode right = lowestCommonAncestor(root.right, p, q);
+        if(left == null)    return right;
+        if(right == null)   return left;
+        return root;
+    }
+}
+
 class UnitTest{
     @Test
     public void test(){
