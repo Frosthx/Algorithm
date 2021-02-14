@@ -1201,7 +1201,7 @@ class _40_getLeastNumbers {
     }
 }
 
-class _40_getLestaNumbers_heap{
+class _40_getLeastNumbers_heap{
     public int[] getLeastNumbers(int[] arr, int k) {
         if(k <= 0)  return new int[0];
         else if(k == arr.length)    return arr;
